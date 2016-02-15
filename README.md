@@ -9,7 +9,7 @@ This utility will consist of 2 primary commands, "init" and "now".
 
 init is the command that will be used to generate the configuration file. The configuration file will somewhat look like the following (tbd): 
 
-```json
+```
 {
    "server": "",
    "user": "",
