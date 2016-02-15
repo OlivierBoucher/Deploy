@@ -11,23 +11,23 @@ init is the command that will be used to generate the configuration file. The co
 
 ```json
 {
-   "server": "",
-   "user": "",
-   "pwd": "",
-   "project": {
-      "name": "",
-      "preset": "",
-      "directories ": {
-         "source": "",
-         "build": ""
-      }
-   },
-   "scripts": {
-      "before": [],
-      "test": [],
-      "build": [],
-      "after": []
-   }
+   "server": "",
+   "user": "",
+   "pwd": "",
+   "project": {
+      "name": "",
+      "preset": "",
+      "directories ": {
+         "source": "",
+         "build": ""
+      }
+   },
+   "scripts": {
+      "before": [],
+      "test": [],
+      "build": [],
+      "after": []
+   }
 }
 ```
 
