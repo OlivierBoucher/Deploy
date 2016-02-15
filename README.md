@@ -13,7 +13,7 @@ init is the command that will be used to generate the configuration file. The co
 {
    "server": "",
    "user": "",
-   "pwd": "",
+   "pwd": "", //TBD: we want this to be commitable, so maybe use ENV instead.
    "project": {
       "name": "",
       "preset": "",
@@ -34,3 +34,4 @@ init is the command that will be used to generate the configuration file. The co
 #### > deploy now
 
 now pushes the lastest changes to the server and restarts the service. 
+
