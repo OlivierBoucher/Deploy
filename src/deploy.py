@@ -11,7 +11,7 @@ class Deploy(object):
 
     def __cmd_init(self):
         # testing utilities
-        test = get_string('Enter your name', default='Olivier', validate=lambda x: True, error_msg='HH')
+        # test = get_string('Enter your name', default='Olivier', validate=lambda x: True, error_msg='HH')
         
         # Local info
         #   Project name, default to current dir
