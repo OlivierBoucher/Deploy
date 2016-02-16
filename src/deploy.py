@@ -16,9 +16,6 @@ class Deploy(object):
         }
 
     def __cmd_init(self):
-        # testing utilities
-        # test = get_string('Enter your name', default='Olivier', validate=lambda x: True, error_msg='HH')
-        
         # Local info
         #   Project name, default to current dir
         dir = os.path.basename(os.getcwd())
@@ -33,8 +30,7 @@ class Deploy(object):
         preset = get_string(
             'Select the apropriate preset.',
             validate=lambda x: x in self.presets,
-            error_msg='The selected preset does not exist. Please refer to this list:\n\t- ' + presets_list
-            )
+            error_msg='The selected preset does not exist. Please refer to this list:\n\t- ' + presets_list)
         
         #   Source dir
         #   Build dir
