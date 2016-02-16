@@ -1,4 +1,13 @@
+import re
 from sys import stdin
+
+
+def valid_address(address):
+    ip_pattern = re.compile("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$")
+    host_pattern = re.compile("^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$")
+    
+    return ip_pattern.match(address) or host_pattern.match(address)
+    
 
 def get_string(label, default=None,  validate=None, error_msg=None):
     """Gets the desired string from stdin.

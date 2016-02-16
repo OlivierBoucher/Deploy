@@ -1,5 +1,5 @@
 import os
-from utilities import get_string
+from utilities import get_string, valid_address
 
 class Deploy(object):
     def __init__(self, command, config):
@@ -46,7 +46,16 @@ class Deploy(object):
         
         # Remote
         #   Server address
+        srv_address = get_string(
+            'Enter the remote server address.',
+            validate=valid_address,
+            error_msg='The address must be a valid IP or hostname.')
+        
         #   Server user
+        srv_user = get_string(
+            'Enter the remote server user.',
+            validate=lambda x: x is not '',
+            error_msg='The user field cannot be empty.')
         
 
     def __cmd_now(self):
