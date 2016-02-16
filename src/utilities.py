@@ -3,6 +3,15 @@ from sys import stdin
 
 
 def valid_address(address):
+    """Validate wheter an address is a valid hostname or IP address.
+    
+    Args:
+        address (string): The input address to validate.
+    
+    Returns:
+        bool: Wheter the input address is valid.
+    
+    """
     ip_pattern = re.compile("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$")
     host_pattern = re.compile("^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$")
     

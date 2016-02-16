@@ -57,6 +57,10 @@ class Deploy(object):
             validate=lambda x: x is not '',
             error_msg='The user field cannot be empty.')
         
+        # Test SSH connection
+        
+        # Write .deploy file
+        
 
     def __cmd_now(self):
         print 'now'
