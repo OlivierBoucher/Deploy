@@ -1,5 +1,4 @@
-import argparse
-
+from utilities import get_string
 
 class Deploy(object):
     def __init__(self, command, config):
@@ -12,19 +11,12 @@ class Deploy(object):
 
     def __init(self):
         print 'init'
+        # testing utilities
+        test = get_string('Enter your name', default='Olivier', validate=lambda x: True, error_msg='HH')
+        print 'you entered ' + test
 
     def __now(self):
         print 'now'
 
     def execute(self):
         self.commands[self.cmd]()
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Painless code deployment.')
-    parser.add_argument('command', metavar='cmd', help='The command to execute.', choices=['init', 'now'])
-
-    args = parser.parse_args()
-
-    deploy = Deploy(args.command, None)
-    deploy.execute()
