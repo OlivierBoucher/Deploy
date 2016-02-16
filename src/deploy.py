@@ -33,7 +33,16 @@ class Deploy(object):
             error_msg='The selected preset does not exist. Please refer to this list:\n\t- ' + presets_list)
         
         #   Source dir
+        source_dir = get_string(
+            'Enter the source directory relative path. (Optional)',
+            validate=lambda x: x is '' or os.path.exists(os.getcwd() + '/' + x),
+            error_msg='The selected directory does not exist')
+        
         #   Build dir
+        build_dir = get_string(
+            'Enter the build directory containing the binaries relative path. (Optional)',
+            validate=lambda x: x is '' or os.path.exists(os.getcwd() + '/' + x),
+            error_msg='The selected directory does not exist')
         
         # Remote
         #   Server address
