@@ -1,5 +1,5 @@
-import os
-from utilities import get_string, valid_address
+import os, json
+from utilities import get_string, valid_address, valid_ssh_connection
 
 class Deploy(object):
     def __init__(self, command, config):
@@ -58,8 +58,37 @@ class Deploy(object):
             error_msg='The user field cannot be empty.')
         
         # Test SSH connection
+        if not valid_ssh_connection(srv_address, srv_user):
+            print '[WARNING]: Could not validate SSH connection.'
         
         # Write .deploy file
+        config = {
+            'server': {
+                'address': srv_address,
+                'user' : srv_user
+            },
+            'project': {
+                'name': project,
+                'preset': preset,
+                'directories': {
+                    'source': source_dir,
+                    'build': build_dir
+                }
+            },
+            'scripts': {
+                'before': [],
+                'test' : [],
+                'after': []
+            }
+        }
+        
+        try:
+            file_handle = open('.deploy', 'w+')
+            json.dump(config, file_handle, sort_keys=True, indent=4, separators=(',', ': '))
+        except Exception, e:
+            print 'could not write\n'
+            print e
+        
         
 
     def __cmd_now(self):

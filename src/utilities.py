@@ -1,5 +1,21 @@
-import re
+import re, paramiko
 from sys import stdin
+
+def valid_ssh_connection(address, user):
+    valid = False
+    try:
+        client = paramiko.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        
+        client.connect(address, username=user)
+        valid = True
+    except Exception, e:
+        print e
+    finally:
+        client.close()
+    
+    return valid
 
 
 def valid_address(address):

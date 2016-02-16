@@ -1,0 +1,4 @@
+# Deploy requirements
+
+# Used for SSH connection
+paramiko >= 1.16.0
