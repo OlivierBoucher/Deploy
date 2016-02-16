@@ -11,7 +11,7 @@ def valid_ssh_connection(address, user):
         client.connect(address, username=user)
         valid = True
     except Exception, e:
-        print e
+        pass
     finally:
         client.close()
     
