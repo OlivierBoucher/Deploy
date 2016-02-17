@@ -87,7 +87,6 @@ class Deploy(object):
             },
             'scripts': {
                 'before': [],
-                'test': [],
                 'after': []
             }
         }
@@ -129,8 +128,22 @@ class Deploy(object):
         """ Tries to synchronize the project state with the remote server, then reloads the app remotely.
         """
         # Initial asserts
-        #   [ ] Config file is valid
-        #   [ ] Is called from root of a git repo
+        #   [ ] Config file is valid.
+        #   [ ] Is called from root of a git repo.
+        #   [ ] SSH connection is working.
+        #   [ ] Server has supervisor and git installed.
+        #   [ ] ~/.deploy/{project} exists and is a git repo, otherwise initialize one.
+        #   [ ] Local repo has the remote server
+
+        # Warnings
+        #   [ ] Local repo has uncommitted changes
+        #   [ ] Remote repo is already up to date
+
+        # Do the do
+        #   [ ] Push to the remote
+        #   [ ] Run the before scripts
+        #   [ ] Run the preset
+        #   [ ] Run the after scripts
 
     def execute(self):
         self.commands[self.cmd]()
