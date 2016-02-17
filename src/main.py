@@ -7,5 +7,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    deploy = Deploy(args.command, None)
+    deploy = Deploy(args.command)
     deploy.execute()

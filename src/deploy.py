@@ -96,7 +96,7 @@ class Deploy(object):
             with open('.deploy', 'w+') as file_handle:
                 json.dump(config, file_handle, sort_keys=True, indent=4, separators=(',', ': '))
         except IOError, e:
-            print '[ERROR]: Could not write config file to disk. > {0}'.format(e)
+            raise DeployError(e, '[ERROR]: Could not write config file to disk. > {0}'.format(e))
 
     def _read_config(self):
         """ Read the configuration file and parses it.
@@ -126,7 +126,8 @@ class Deploy(object):
             raise DeployError(e, 'No git repository was found. > {0}'.format(e))
 
     def _cmd_now(self):
-        """  """
+        """ Tries to synchronize the project state with the remote server, then reloads the app remotely.
+        """
         # Initial asserts
         #   [ ] Config file is valid
         #   [ ] Is called from root of a git repo
