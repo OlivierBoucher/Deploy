@@ -19,7 +19,6 @@ function PM_detect {
 
   if [[ -z "$_PM" ]]; then
       # Fallback to shittier method
-      echo 'fallback'
 
       if [[ -x "/usr/bin/pacman" ]]; then
         _PM='pacman'
