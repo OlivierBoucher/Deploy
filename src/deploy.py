@@ -1,10 +1,14 @@
 import os, json
-from utilities import get_string, valid_address, valid_ssh_connection
+from utilities import get_string, valid_address, valid_ssh_connection, valid_config, Terminal
 from git import Repo, InvalidGitRepositoryError
 
 
 class DeployError(Exception):
     """ Base exception class for Deploy program.  """
+
+    def __init__(self, message, base=None):
+        super(DeployError, self).__init__(message)
+        self.base_exception = base
 
 
 class Deploy(object):
@@ -25,6 +29,7 @@ class Deploy(object):
 
         Raises:
             DeployError: if it is impossible to write the config to disc.
+
         """
         # Local info
         #   Project name, default to current dir
@@ -69,7 +74,7 @@ class Deploy(object):
 
         # Test SSH connection
         if not valid_ssh_connection(srv_address, srv_user):
-            print '[WARNING]: Could not validate SSH connection.'
+            Terminal.print_warn('Could not validate SSH connection.')
 
         # Write .deploy file
         config = {
@@ -95,22 +100,27 @@ class Deploy(object):
             with open('.deploy', 'w+') as file_handle:
                 json.dump(config, file_handle, sort_keys=True, indent=4, separators=(',', ': '))
         except IOError, e:
-            raise DeployError(e, '[ERROR]: Could not write config file to disk. > {0}'.format(e))
+            raise DeployError('Could not write config file to disk. > %s' % e, base=e)
 
     def _read_config(self):
         """ Read the configuration file and parses it.
             It then assigns the config to the current Deploy instance.
 
         Raises:
-            DeployError: if the config is missing or corrupted
+            DeployError: if the config is missing or invalid.
+
         """
         try:
             with open('.deploy', 'r') as file_handle:
-                self.config = json.load(file_handle)
+                config_json = file_handle.read()
+                if valid_config(config_json):
+                    self.config = json.loads(config_json)
+                else:
+                    raise DeployError('Invalid configuration file, please refer to previous errors.')
         except IOError, e:
-            raise DeployError(e, 'Config file not found nor present. > {0}'.format(e))
+            raise DeployError('Config file not found nor present.\n\t> %s' % e, base=e)
         except ValueError, e:
-            raise DeployError(e, 'Invalid config file, could not parse JSON. > {0}'.format(e))
+            raise DeployError('Invalid configuration file, could not parse JSON.\n\t> %s' % e, base=e)
 
     def _read_repository(self):
         """ Tries to load the git repository located at current working directory.
@@ -118,17 +128,19 @@ class Deploy(object):
 
         Raises:
             DeployError: if there is no git repository.
+
         """
         try:
             self.repository = Repo(os.getcwd())
         except InvalidGitRepositoryError, e:
-            raise DeployError(e, 'No git repository was found. > {0}'.format(e))
+            raise DeployError('No git repository was found.\n\t> %s' % e, base=e)
 
     def _cmd_now(self):
         """ Tries to synchronize the project state with the remote server, then reloads the app remotely.
         """
         # Initial asserts
         #   [ ] Config file is valid.
+        self._read_config()
         #   [ ] Is called from root of a git repo.
         #   [ ] SSH connection is working.
         #   [ ] Server has supervisor and git installed.
@@ -146,4 +158,7 @@ class Deploy(object):
         #   [ ] Run the after scripts
 
     def execute(self):
-        self.commands[self.cmd]()
+        try:
+            self.commands[self.cmd]()
+        except DeployError, e:
+            Terminal.print_error(str(e))
