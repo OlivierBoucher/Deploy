@@ -34,11 +34,11 @@ def valid_ssh_connection(address, user):
         client.connect(address, username=user)
         valid = True
     except IOError, e:
-        pass
+        return False, e
     finally:
         client.close()
 
-    return valid
+    return valid, None
 
 
 def valid_config(config_json):

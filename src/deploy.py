@@ -73,8 +73,9 @@ class Deploy(object):
             error_msg='The user field cannot be empty.')
 
         # Test SSH connection
-        if not valid_ssh_connection(srv_address, srv_user):
-            Terminal.print_warn('Could not validate SSH connection.')
+        valid, err = valid_ssh_connection(srv_address, srv_user)
+        if not valid:
+            Terminal.print_warn('Could not validate SSH connection.\n\t> %s' % err)
 
         # Write .deploy file
         config = {
@@ -139,11 +140,16 @@ class Deploy(object):
         """ Tries to synchronize the project state with the remote server, then reloads the app remotely.
         """
         # Initial asserts
-        #   [ ] Config file is valid.
+        #   [x] Config file is valid.
         self._read_config()
-        #   [ ] Is called from root of a git repo.
-        #   [ ] SSH connection is working.
+        #   [x] Is called from root of a git repo.
+        self._read_repository()
+        #   [x] SSH connection is working.
+        valid, err = valid_ssh_connection(self.config['server']['address'], self.config['server']['user'])
+        if not valid:
+            raise DeployError('Impossible to connect to remote host.\n\t> %s' % err, base=err)
         #   [ ] Server has supervisor and git installed.
+
         #   [ ] ~/.deploy/{project} exists and is a git repo, otherwise initialize one.
         #   [ ] Local repo has the remote server
 
