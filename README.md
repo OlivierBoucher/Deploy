@@ -11,23 +11,23 @@ init is the command that will be used to generate the configuration file. The co
 
 ```
 {
-   "server": "",
-   "user": "",
-   "pwd": "", //TBD: we want this to be commitable, so maybe use ENV instead.
-   "project": {
-      "name": "",
-      "preset": "",
-      "directories ": {
-         "source": "",
-         "build": ""
-      }
-   },
-   "scripts": {
-      "before": [],
-      "test": [],
-      "build": [],
-      "after": []
-   }
+    "project": {
+        "directories": {
+            "build": "",
+            "source": ""
+        },
+        "name": "",
+        "preset": ""
+    },
+    "scripts": {
+        "after": [],
+        "before": [],
+        "test": []
+    },
+    "server": {
+        "address": "",
+        "user": ""
+    }
 }
 ```
 
