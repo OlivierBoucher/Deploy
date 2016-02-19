@@ -1,8 +1,10 @@
-from paramiko import SSHClient, AutoAddPolicy
+import errno
 
-from terminal import Terminal
+from paramiko import SSHClient, SFTPClient, AutoAddPolicy
 
 from utilities import get_bash_script, get_string
+
+from terminal import Terminal
 
 
 class ServerError(Exception):
@@ -22,9 +24,9 @@ class Server(object):
         self.address = address
         self.user = user
         self.password = None
-        self.client = SSHClient()
-        self.client.load_system_host_keys()
-        self.client.set_missing_host_key_policy(AutoAddPolicy())
+        self.ssh_client = SSHClient()
+        self.ssh_client.load_system_host_keys()
+        self.ssh_client.set_missing_host_key_policy(AutoAddPolicy())
 
     def has_valid_connection(self):
         """ Validates the SSH connection to a remote server.
@@ -34,11 +36,11 @@ class Server(object):
 
         """
         try:
-            self.client.connect(self.address, username=self.user)
+            self.ssh_client.connect(self.address, username=self.user)
         except IOError, e:
             return False, e
         finally:
-            self.client.close()
+            self.ssh_client.close()
 
         return True, None
 
@@ -52,22 +54,15 @@ class Server(object):
             ServerError: If the connection closes or we fail to retrieve the package manager.
 
         """
-        try:
-            self.client.connect(self.address, username=self.user)
-            stdin, stdout, stderr = self.client.exec_command(
-                "bash -c '%s'" % get_bash_script(Server.SCRIPT_DETECT_PM))
+        stdin, stdout, stderr = self.ssh_client.exec_command(
+            "bash -c '%s'" % get_bash_script(Server.SCRIPT_DETECT_PM))
 
-            package_manager = stdout.read().rstrip()
+        package_manager = stdout.read().rstrip()
 
-            if package_manager.startswith('[ERROR]'):
-                raise ServerError('Could not retrieve the package manager.\n\t> %s' % package_manager)
+        if package_manager.startswith('[ERROR]'):
+            raise ServerError('Could not retrieve the package manager.\n\t> %s' % package_manager)
 
-            return package_manager
-
-        except IOError, e:
-            raise ServerError('An error occurred with the ssh connection.\n\t> %s' % e, base=e)
-        finally:
-            self.client.close()
+        return package_manager
 
     def _validate_single_dep_installed(self, pm, dep):
         """ Validates that a specific dependency is installed on the remote server.
@@ -82,7 +77,7 @@ class Server(object):
         """
         script = "%s\nis_installed %s %s" % (get_bash_script(Server.SCRIPT_DEP_INSTALLED), pm, dep)
         command = "bash -c '%s'" % script
-        stdin, stdout, stderr = self.client.exec_command(command)
+        stdin, stdout, stderr = self.ssh_client.exec_command(command)
 
         ret_code, errors = stdout.read().rstrip(), stderr.read().rstrip()
 
@@ -102,8 +97,8 @@ class Server(object):
 
         """
         try:
+            self.ssh_client.connect(self.address, username=self.user)
             pm = self._get_package_manager()
-            self.client.connect(self.address, username=self.user)
             for dep in deps:
                 if not self._validate_single_dep_installed(pm, dep):
                     if self.user is not 'root' and self.password is None:
@@ -117,7 +112,7 @@ class Server(object):
         except IOError, e:
             raise ServerError('An error occurred with the ssh connection.\n\t> %s' % e, base=e)
         finally:
-            self.client.close()
+            self.ssh_client.close()
 
     def _install_dependency(self, pm, dep):
         stdout, stderr = self._execute_sudo_cmd('sudo %s install -y %s' % (pm, dep))
@@ -129,7 +124,7 @@ class Server(object):
         return error is ''
 
     def _execute_sudo_cmd(self, cmd):
-        transport = self.client.get_transport()
+        transport = self.ssh_client.get_transport()
         session = transport.open_session()
         session.get_pty()
 
@@ -147,3 +142,39 @@ class Server(object):
         """"""
         self.password = get_string(label, password=True)
         return self.password
+
+    def _has_directory(self, sftp, directory):
+        try:
+            sftp.stat(directory)
+        except IOError, e:
+            if e.errno is errno.ENOENT:
+                return False
+            else:
+                raise
+        return True
+
+    def _create_directory(self, directory):
+        try:
+            stdin, stdout, stderr = self.ssh_client.exec_command('mkdir -p %s' % directory)
+            out, err = stdout.read().rstrip(), stderr.read().rstrip()
+            return out is '' and err is ''
+        except IOError, e:
+            return False
+
+    def has_directories(self, directories, auto_create=True):
+        try:
+            self.ssh_client.connect(self.address, username=self.user)
+            sftp_client = SFTPClient.from_transport(self.ssh_client.get_transport())
+
+            for directory in directories:
+                if not self._has_directory(sftp_client, directory) and auto_create:
+                    Terminal.print_warn('Missing directory "%s", attempting to create.' % directory)
+                    if not self._create_directory(directory):
+                        raise ServerError('Could not create directory "%s"' % directory)
+                else:
+                    raise ServerError('Missing directory "%s"' % directory)
+
+        except IOError, e:
+                raise ServerError('An error occurred with the ssh connection.\n\t> %s' % e, base=e)
+        finally:
+            self.ssh_client.close()

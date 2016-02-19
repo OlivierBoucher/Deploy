@@ -170,7 +170,14 @@ class Deploy(object):
         except ServerError, e:
             raise DeployError('Server error.\n\t> %s' % e, base=e)
 
-        #   [ ] ~/.deploy/{project} exists and is a git repo, otherwise initialize one.
+        #   [x] ~/.deploy/{project} exists, or create
+        try:
+            server.has_directories(['~/.deploy/%s' % self.config['project']['name']])
+        except ServerError, e:
+            raise DeployError('Server error.\n\t> %s' % e, base=e)
+
+        #   [ ] download ~/.deploy/{project}/.git, import in GitPython, compare with local repo
+
         #   [ ] Local repo has the remote server
 
         # Warnings
