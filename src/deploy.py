@@ -198,15 +198,17 @@ class Deploy(object):
         except ValueError, e:
             self.repository.create_remote('deploy', remote_repo_url)
 
-            # Warnings
-            #   [ ] Local repo has uncommitted changes
-            #   [ ] Remote repo is already up to date
+        # [ ] setup supervisor config
 
-            # Do the do
-            #   [ ] Push to the remote
-            #   [ ] Run the before scripts
-            #   [ ] Run the preset
-            #   [ ] Run the after scripts
+        # Warnings
+        #   [ ] Local repo has uncommitted changes
+        #   [ ] Remote repo is already up to date
+
+        # Do the do
+        #   [ ] Push to the remote
+        #   [ ] Run the before scripts
+        #   [ ] Run the preset
+        #   [ ] Run the after scripts
 
     def execute(self):
         try:
