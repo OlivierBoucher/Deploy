@@ -1,5 +1,6 @@
 import jsonschema
 import re
+import getpass
 
 from sys import stdin
 
@@ -120,7 +121,7 @@ def valid_address(address):
     return ip_pattern.match(address) or host_pattern.match(address)
 
 
-def get_string(label, default=None, validate=None, error_msg=None):
+def get_string(label, default=None, validate=None, error_msg=None, password=False):
     """Gets the desired string from stdin.
     
     Args:
@@ -128,6 +129,7 @@ def get_string(label, default=None, validate=None, error_msg=None):
         default (Optional[str]): The default value. Defaults to None.
         validate (Optional[lambda]): The function used to validate the input. Defaults to None.
         error_msg (Optional[str]): The error message shown to the user. Defaults to None.
+        password (Optional[bool]): If the input must be masked.
     
     Returns:
         string: User selected value or default.
@@ -136,7 +138,10 @@ def get_string(label, default=None, validate=None, error_msg=None):
     while True:
         print label if default is None else label + ' (' + default + ')'
 
-        input_txt = stdin.readline().rstrip('\n')
+        if not password:
+            input_txt = stdin.readline().rstrip('\n')
+        else:
+            input_txt = getpass.getpass()
 
         if input_txt is '' and default is not None:
             input_txt = default

@@ -145,6 +145,10 @@ class Deploy(object):
 
     def _cmd_now(self):
         """ Tries to synchronize the project state with the remote server, then reloads the app remotely.
+
+        Raises:
+            DeployError: If any of the assertion steps fails.
+
         """
         # Initial asserts
 
