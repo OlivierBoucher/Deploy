@@ -189,12 +189,12 @@ class Deploy(object):
             raise DeployError('Server error.\n\t> %s' % e, base=e)
 
         # [x] Local repo has the remote server
-        remote_repo_url = "ssh://{0}@{1}/home/{0}/.deploy/{2}/src.git".format(user, address, project_name)
+        remote_repo_url = 'ssh://{0}@{1}/home/{0}/.deploy/{2}/src.git'.format(user, address, project_name)
         try:
             remote_repo = self.repository.remote(name='deploy')
             if remote_repo.url != remote_repo_url:
                 cw = remote_repo.config_writer
-                cw.set("pushurl", remote_repo_url)
+                cw.set('url', remote_repo_url)
         except ValueError, e:
             self.repository.create_remote('deploy', remote_repo_url)
 
