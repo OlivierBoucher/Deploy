@@ -172,14 +172,16 @@ class Deploy(object):
 
         #   [x] ~/.deploy/{project} exists, or create
         app_directory = '~/.deploy/%s' % self.config['project']['name']
+        bare_repo_directory = '%s/src.git' % app_directory
+        sources_directory = '%s/src' % app_directory
         try:
-            server.has_directories([app_directory])
+            server.has_directories([app_directory, bare_repo_directory, sources_directory])
         except ServerError, e:
             raise DeployError('Server error.\n\t> %s' % e, base=e)
 
-        #   [ ] check if git repo exists, create if necessary
+        #   [x] check if bare and src git repo exists, create if necessary
         try:
-            server.has_git_repository(app_directory)
+            server.has_git_repositories(bare_repo_directory, sources_directory)
         except Server, e:
             raise DeployError('Server error.\n\t> %s' % e, base=e)
 

@@ -176,31 +176,45 @@ class Server(object):
         finally:
             self.ssh_client.close()
 
-    def _init_bare_repo(self, path):
-        stdin, stdout, stderr = self.ssh_client.exec_command('cd %s && git init --bare' % path)
+    def _init_repo(self, path, bare=False):
+        cmd = 'cd %s && git init' % path
+        if bare:
+            cmd = '%s --bare' % cmd
+        stdin, stdout, stderr = self.ssh_client.exec_command(cmd)
 
         out, err = stdout.read().rstrip(), stderr.read().rstrip()
 
         return out.startswith('Initialized empty Git repository') and err is ''
 
-    def _is_bare_repo(self, path):
-        for item in ['branches', 'config', 'description', 'HEAD', 'hooks', 'info', 'objects', 'refs']:
-            if not self._has_file('%s/%s' % (path, item)):
-                return False
-        return True
+    def _is_repo(self, path, bare=False):
 
-    def has_git_repository(self, path, auto_create=True):
+        if bare:
+            for item in ['branches', 'config', 'description', 'HEAD', 'hooks', 'info', 'objects', 'refs']:
+                if not self._has_file('%s/%s' % (path, item)):
+                    return False
+            return True
+        else:
+            return self._has_file('%s/.git' % path)
+
+    def has_git_repositories(self, bare_repo_directory, src_repo_directory, auto_create=True):
         try:
             self.ssh_client.connect(self.address, username=self.user)
 
-            if not self._is_bare_repo(path):
+            if not self._is_repo(bare_repo_directory, bare=True):
                 if auto_create:
-                    Terminal.print_warn('No git repository in "%s", attempting to create.' % path)
-                    if not self._init_bare_repo(path):
-                        raise ServerError('Could not create git repository in "%s"' % path)
+                    Terminal.print_warn('No bare git repository in "%s", attempting to create.' % bare_repo_directory)
+                    if not self._init_repo(bare_repo_directory, bare=True):
+                        raise ServerError('Could not create bare git repository in "%s"' % bare_repo_directory)
                 else:
-                    raise ServerError('Missing git repository in "%s".' % path)
+                    raise ServerError('Missing bare git repository in "%s".' % bare_repo_directory)
 
+            if not self._is_repo(src_repo_directory, bare=False):
+                if auto_create:
+                    Terminal.print_warn('No src git repository in "%s", attempting to create.' % src_repo_directory)
+                    if not self._init_repo(src_repo_directory, bare=False):
+                        raise ServerError('Could not create src git repository in "%s"' % src_repo_directory)
+                else:
+                    raise ServerError('Missing src git repository in "%s".' % src_repo_directory)
         except IOError, e:
             raise ServerError('An error occurred with the ssh connection.\n\t> %s' % e, base=e)
         finally:
