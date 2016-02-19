@@ -143,15 +143,12 @@ class Server(object):
         self.password = get_string(label, password=True)
         return self.password
 
-    def _has_directory(self, sftp, directory):
-        try:
-            sftp.stat(directory)
-        except IOError, e:
-            if e.errno is errno.ENOENT:
-                return False
-            else:
-                raise
-        return True
+    def _has_file(self, directory):
+        stdin, stdout, stderr = self.ssh_client.exec_command('stat %s' % directory)
+
+        out, err = stdout.read().rstrip(), stderr.read().rstrip()
+
+        return not err.endswith('No such file or directory')
 
     def _create_directory(self, directory):
         try:
@@ -164,17 +161,47 @@ class Server(object):
     def has_directories(self, directories, auto_create=True):
         try:
             self.ssh_client.connect(self.address, username=self.user)
-            sftp_client = SFTPClient.from_transport(self.ssh_client.get_transport())
 
             for directory in directories:
-                if not self._has_directory(sftp_client, directory) and auto_create:
-                    Terminal.print_warn('Missing directory "%s", attempting to create.' % directory)
-                    if not self._create_directory(directory):
-                        raise ServerError('Could not create directory "%s"' % directory)
-                else:
-                    raise ServerError('Missing directory "%s"' % directory)
+                if not self._has_file(directory):
+                    if auto_create:
+                        Terminal.print_warn('Missing directory "%s", attempting to create.' % directory)
+                        if not self._create_directory(directory):
+                            raise ServerError('Could not create directory "%s"' % directory)
+                    else:
+                        raise ServerError('Missing directory "%s".' % directory)
 
         except IOError, e:
-                raise ServerError('An error occurred with the ssh connection.\n\t> %s' % e, base=e)
+            raise ServerError('An error occurred with the ssh connection.\n\t> %s' % e, base=e)
+        finally:
+            self.ssh_client.close()
+
+    def _init_bare_repo(self, path):
+        stdin, stdout, stderr = self.ssh_client.exec_command('cd %s && git init --bare' % path)
+
+        out, err = stdout.read().rstrip(), stderr.read().rstrip()
+
+        return out.startswith('Initialized empty Git repository') and err is ''
+
+    def _is_bare_repo(self, path):
+        for item in ['branches', 'config', 'description', 'HEAD', 'hooks', 'info', 'objects', 'refs']:
+            if not self._has_file('%s/%s' % (path, item)):
+                return False
+        return True
+
+    def has_git_repository(self, path, auto_create=True):
+        try:
+            self.ssh_client.connect(self.address, username=self.user)
+
+            if not self._is_bare_repo(path):
+                if auto_create:
+                    Terminal.print_warn('No git repository in "%s", attempting to create.' % path)
+                    if not self._init_bare_repo(path):
+                        raise ServerError('Could not create git repository in "%s"' % path)
+                else:
+                    raise ServerError('Missing git repository in "%s".' % path)
+
+        except IOError, e:
+            raise ServerError('An error occurred with the ssh connection.\n\t> %s' % e, base=e)
         finally:
             self.ssh_client.close()
