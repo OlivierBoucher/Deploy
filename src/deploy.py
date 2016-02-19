@@ -159,19 +159,22 @@ class Deploy(object):
         self._read_repository()
 
         #   [x] SSH connection is working.
-        server = Server(self.config['server']['address'], self.config['server']['user'])
+        address = self.config['server']['address']
+        user = self.config['server']['user']
+        server = Server(address, user)
         valid, err = server.has_valid_connection()
         if not valid:
             raise DeployError('Impossible to connect to remote host.\n\t> %s' % err, base=err)
 
-        #   [x] Server has supervisor and git installed.
+        # [x] Server has supervisor and git installed.
         try:
             server.validate_dep_list_installed(['supervisor', 'git'])
         except ServerError, e:
             raise DeployError('Server error.\n\t> %s' % e, base=e)
 
-        #   [x] ~/.deploy/{project} exists, or create
-        app_directory = '~/.deploy/%s' % self.config['project']['name']
+        # [x] ~/.deploy/{project} exists, or create
+        project_name = self.config['project']['name']
+        app_directory = '~/.deploy/%s' % project_name
         bare_repo_directory = '%s/src.git' % app_directory
         sources_directory = '%s/src' % app_directory
         try:
@@ -179,23 +182,31 @@ class Deploy(object):
         except ServerError, e:
             raise DeployError('Server error.\n\t> %s' % e, base=e)
 
-        #   [x] check if bare and src git repo exists, create if necessary
+        # [x] check if bare and src git repo exists, create if necessary
         try:
             server.has_git_repositories(bare_repo_directory, sources_directory)
         except Server, e:
             raise DeployError('Server error.\n\t> %s' % e, base=e)
 
-        #   [ ] Local repo has the remote server
+        # [x] Local repo has the remote server
+        remote_repo_url = "ssh://{0}@{1}/home/{0}/.deploy/{2}/src.git".format(user, address, project_name)
+        try:
+            remote_repo = self.repository.remote(name='deploy')
+            if remote_repo.url is not remote_repo_url:
+                cw = remote_repo.config_writer
+                cw.set("pushurl", remote_repo_url)
+        except ValueError, e:
+            self.repository.create_remote('deploy', remote_repo_url)
 
-        # Warnings
-        #   [ ] Local repo has uncommitted changes
-        #   [ ] Remote repo is already up to date
+            # Warnings
+            #   [ ] Local repo has uncommitted changes
+            #   [ ] Remote repo is already up to date
 
-        # Do the do
-        #   [ ] Push to the remote
-        #   [ ] Run the before scripts
-        #   [ ] Run the preset
-        #   [ ] Run the after scripts
+            # Do the do
+            #   [ ] Push to the remote
+            #   [ ] Run the before scripts
+            #   [ ] Run the preset
+            #   [ ] Run the after scripts
 
     def execute(self):
         try:
