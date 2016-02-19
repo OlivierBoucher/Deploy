@@ -6,6 +6,7 @@ from sys import stdin
 from terminal import Terminal
 
 
+# TODO(Olivier): remove this function and store the scripts in memory.
 def get_bash_script(script):
     with open('bash/%s.sh' % script, 'r') as file_handle:
         script = file_handle.read()

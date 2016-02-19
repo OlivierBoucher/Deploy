@@ -7,7 +7,7 @@ from utilities import get_string, valid_address, valid_config
 
 from terminal import Terminal
 
-from server import Server
+from server import Server, ServerError
 
 
 class DeployError(Exception):
@@ -147,16 +147,24 @@ class Deploy(object):
         """ Tries to synchronize the project state with the remote server, then reloads the app remotely.
         """
         # Initial asserts
+
         #   [x] Config file is valid.
         self._read_config()
+
         #   [x] Is called from root of a git repo.
         self._read_repository()
+
         #   [x] SSH connection is working.
         server = Server(self.config['server']['address'], self.config['server']['user'])
         valid, err = server.has_valid_connection()
         if not valid:
             raise DeployError('Impossible to connect to remote host.\n\t> %s' % err, base=err)
-        #   [ ] Server has supervisor and git installed.
+
+        #   [x] Server has supervisor and git installed.
+        try:
+            server.validate_dep_list_installed(['supervisor', 'git'])
+        except ServerError, e:
+            raise DeployError('Server error.\n\t> %s' % e, base=e)
 
         #   [ ] ~/.deploy/{project} exists and is a git repo, otherwise initialize one.
         #   [ ] Local repo has the remote server
