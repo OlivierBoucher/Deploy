@@ -1,6 +1,13 @@
-import os, json
-from utilities import get_string, valid_address, valid_ssh_connection, valid_config, Terminal
+import json
+import os
+
 from git import Repo, InvalidGitRepositoryError
+
+from utilities import get_string, valid_address, valid_config
+
+from terminal import Terminal
+
+from server import Server
 
 
 class DeployError(Exception):
@@ -73,7 +80,7 @@ class Deploy(object):
             error_msg='The user field cannot be empty.')
 
         # Test SSH connection
-        valid, err = valid_ssh_connection(srv_address, srv_user)
+        valid, err = Server(srv_address, srv_user).has_valid_connection()
         if not valid:
             Terminal.print_warn('Could not validate SSH connection.\n\t> %s' % err)
 
@@ -145,7 +152,8 @@ class Deploy(object):
         #   [x] Is called from root of a git repo.
         self._read_repository()
         #   [x] SSH connection is working.
-        valid, err = valid_ssh_connection(self.config['server']['address'], self.config['server']['user'])
+        server = Server(self.config['server']['address'], self.config['server']['user'])
+        valid, err = server.has_valid_connection()
         if not valid:
             raise DeployError('Impossible to connect to remote host.\n\t> %s' % err, base=err)
         #   [ ] Server has supervisor and git installed.
