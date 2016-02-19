@@ -6,6 +6,12 @@ from sys import stdin
 from terminal import Terminal
 
 
+def get_bash_script(script):
+    with open('bash/%s.sh' % script, 'r') as file_handle:
+        script = file_handle.read()
+        return script
+
+
 def valid_config(config_json):
     """ Validates the configuration file against the required schema
 

@@ -21,28 +21,27 @@ function PM_detect {
       # Fallback to shittier method
 
       if [[ -x "/usr/bin/pacman" ]]; then
-        _PM='pacman'
+        _PM="pacman"
       fi
 
       if [[ -x "/usr/bin/apt-get" ]]; then
-        _PM='apt-get'
+        _PM="apt-get"
       fi
 
       if [[ -x "/usr/bin/yum" ]]; then
-        _PM='yum'
+        _PM="yum"
       fi
 
       if [[ -x "/usr/bin/zypper" ]]; then
-        _PM='zypper'
+        _PM="zypper"
       fi
 
       if command -v brew >/dev/null; then
-        _PM='brew'
+        _PM="brew"
       fi
 
       if [[ -z "$_PM" ]]; then
-        _error "No supported package manager installed on system"
-        _error "(supported: apt-get, brew, pacman, zypper, yum)"
+        echo "No supported package manager installed on system"
         exit 1
       fi
   fi
