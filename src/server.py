@@ -37,9 +37,36 @@ class Server(object):
             stdin, stdout, stderr = self.client.exec_command(
                 "bash -c '%s'" % get_bash_script(Server.SCRIPT_DETECT_PM))
 
-            return stdout.read().rstrip()
+            package_manager = stdout.read().rstrip()
+
+            if package_manager.startswith('[ERROR]'):
+                raise ServerError('Could not retrieve the package manager.\n\t> %s' % package_manager)
+
+            return package_manager
 
         except IOError, e:
-            return False, e
+            raise ServerError('An error occurred with the ssh connection.\n\t> %s' % e, base=e)
+        finally:
+            self.client.close()
+
+    def _validate_single_dep_installed(self, pm, dep):
+        script = "%s\nis_installed %s %s" % (get_bash_script(Server.SCRIPT_DEP_INSTALLED), pm, dep)
+        command = "bash -c '%s'" % script
+        stdin, stdout, stderr = self.client.exec_command(command)
+
+        ret_code, errors = stdout.read().rstrip(), stderr.read()
+
+        return ret_code is '0'
+
+    def validate_dep_list_installed(self, deps):
+        try:
+            pm = self._get_package_manager()
+            self.client.connect(self.address, username=self.user)
+            for dep in deps:
+                if not self._validate_single_dep_installed(pm, dep):
+                    raise ServerError('Missing dependecy "{0}". Please install using "{1} install {0}"'.format(dep, pm))
+
+        except IOError, e:
+            raise ServerError('An error occurred with the ssh connection.\n\t> %s' % e, base=e)
         finally:
             self.client.close()

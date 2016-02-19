@@ -41,7 +41,7 @@ function PM_detect {
       fi
 
       if [[ -z "$_PM" ]]; then
-        echo "No supported package manager installed on system"
+        echo "[ERROR]: No supported package manager installed on system"
         exit 1
       fi
   fi

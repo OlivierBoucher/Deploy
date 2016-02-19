@@ -10,7 +10,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     s = Server('streamcenterapp.com', 'olivier')
-    print s._get_package_manager()
+    s.validate_dep_list_installed(['nano', 'shdsja'])
 
     #deploy = Deploy(args.command)
     #deploy.execute()
