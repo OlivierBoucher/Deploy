@@ -6,13 +6,14 @@ from utilities import get_bash_script
 
 
 class ServerError(Exception):
+    """ Base error class for Server """
     def __init__(self, message, base=None):
         super(ServerError, self).__init__(message)
         self.base_exception = base
 
 
 class Server(object):
-    """"""
+    """ Represents a target remote server """
     SCRIPT_DEP_INSTALLED = 'dependencies_installed'
     SCRIPT_DETECT_PM = 'detect_pm'
 
@@ -24,6 +25,12 @@ class Server(object):
         self.client.set_missing_host_key_policy(AutoAddPolicy())
 
     def has_valid_connection(self):
+        """ Validates the SSH connection to a remote server.
+
+        Returns:
+            bool: If the connection is valid.
+
+        """
         try:
             self.client.connect(self.address, username=self.user)
         except IOError, e:
@@ -34,6 +41,15 @@ class Server(object):
         return True, None
 
     def _get_package_manager(self):
+        """ Gets the remote server package manager in an OS agnostic way.
+
+        Returns:
+            string: The package manager, if supported.
+
+        Raises:
+            ServerError: If the connection closes or we fail to retrieve the package manager.
+
+        """
         try:
             self.client.connect(self.address, username=self.user)
             stdin, stdout, stderr = self.client.exec_command(
@@ -52,6 +68,16 @@ class Server(object):
             self.client.close()
 
     def _validate_single_dep_installed(self, pm, dep):
+        """ Validates that a specific dependency is installed on the remote server.
+
+        Args:
+            pm (string): The server's package manager name.
+            dep (string: The dependency to validate.
+
+        Returns:
+            bool: If the dependency is installed.
+
+        """
         script = "%s\nis_installed %s %s" % (get_bash_script(Server.SCRIPT_DEP_INSTALLED), pm, dep)
         command = "bash -c '%s'" % script
         stdin, stdout, stderr = self.client.exec_command(command)
@@ -64,6 +90,15 @@ class Server(object):
         return ret_code is '0'
 
     def validate_dep_list_installed(self, deps):
+        """ Validates that certain dependencies are installed on the remote server.
+
+        Args:
+            deps (list): The list of dependencies to validate against (Strings).
+
+        Raises:
+            ServerError: If a dependency is missing.
+
+        """
         try:
             pm = self._get_package_manager()
             self.client.connect(self.address, username=self.user)
