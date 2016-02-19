@@ -1,5 +1,7 @@
 from paramiko import SSHClient, AutoAddPolicy
 
+from terminal import Terminal
+
 from utilities import get_bash_script
 
 
@@ -54,7 +56,10 @@ class Server(object):
         command = "bash -c '%s'" % script
         stdin, stdout, stderr = self.client.exec_command(command)
 
-        ret_code, errors = stdout.read().rstrip(), stderr.read()
+        ret_code, errors = stdout.read().rstrip(), stderr.read().rstrip()
+
+        if errors is not '':
+            Terminal.print_warn('Got errors from dependency checker script.\n\t> %s' % errors)
 
         return ret_code is '0'
 
