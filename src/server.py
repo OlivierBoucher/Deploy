@@ -186,6 +186,14 @@ class Server(object):
 
         return out.startswith('Initialized empty Git repository') and err is ''
 
+    def _clone_repo(self, bare_repo_directory, src_repo_directory):
+        stdin, stdout, stderr = self.ssh_client.exec_command(
+            'git clone %s %s' % (bare_repo_directory, src_repo_directory))
+
+        out, err = stdout.read().rstrip(), stderr.read().rstrip()
+
+        return out.endswith('done.') or err.endswith('done.')
+
     def _is_repo(self, path, bare=False):
 
         if bare:
@@ -211,7 +219,7 @@ class Server(object):
             if not self._is_repo(src_repo_directory, bare=False):
                 if auto_create:
                     Terminal.print_warn('No src git repository in "%s", attempting to create.' % src_repo_directory)
-                    if not self._init_repo(src_repo_directory, bare=False):
+                    if not self._clone_repo(bare_repo_directory, src_repo_directory):
                         raise ServerError('Could not create src git repository in "%s"' % src_repo_directory)
                 else:
                     raise ServerError('Missing src git repository in "%s".' % src_repo_directory)
