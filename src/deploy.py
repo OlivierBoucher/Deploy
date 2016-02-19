@@ -192,7 +192,7 @@ class Deploy(object):
         remote_repo_url = "ssh://{0}@{1}/home/{0}/.deploy/{2}/src.git".format(user, address, project_name)
         try:
             remote_repo = self.repository.remote(name='deploy')
-            if remote_repo.url is not remote_repo_url:
+            if remote_repo.url != remote_repo_url:
                 cw = remote_repo.config_writer
                 cw.set("pushurl", remote_repo_url)
         except ValueError, e:

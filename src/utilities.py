@@ -143,7 +143,7 @@ def get_string(label, default=None, validate=None, error_msg=None, password=Fals
         else:
             input_txt = getpass.getpass()
 
-        if input_txt is '' and default is not None:
+        if input_txt == '' and default is not None:
             input_txt = default
 
         if validate is None or validate(input_txt):

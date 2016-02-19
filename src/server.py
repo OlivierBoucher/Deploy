@@ -84,7 +84,7 @@ class Server(object):
         # if errors is not '':
         # Terminal.print_warn('Got errors from dependency checker script.\n\t> %s' % errors)
 
-        return ret_code is '0'
+        return ret_code == '0'
 
     def validate_dep_list_installed(self, deps):
         """ Validates that certain dependencies are installed on the remote server.
@@ -101,7 +101,7 @@ class Server(object):
             pm = self._get_package_manager()
             for dep in deps:
                 if not self._validate_single_dep_installed(pm, dep):
-                    if self.user is not 'root' and self.password is None:
+                    if self.user != 'root' and self.password is None:
                         self._prompt_superuser_pwd(
                             'Missing dependency "%s". Please enter password to proceed to installation.' % dep)
 
@@ -118,10 +118,10 @@ class Server(object):
         stdout, stderr = self._execute_sudo_cmd('sudo %s install -y %s' % (pm, dep))
 
         ret, error = stdout.read().rstrip(), stderr.read().rstrip()
-        if error is not '':
+        if error != '':
             self.password = None
 
-        return error is ''
+        return error == ''
 
     def _execute_sudo_cmd(self, cmd):
         transport = self.ssh_client.get_transport()
@@ -154,7 +154,7 @@ class Server(object):
         try:
             stdin, stdout, stderr = self.ssh_client.exec_command('mkdir -p %s' % directory)
             out, err = stdout.read().rstrip(), stderr.read().rstrip()
-            return out is '' and err is ''
+            return out == '' and err == ''
         except IOError, e:
             return False
 
@@ -184,7 +184,7 @@ class Server(object):
 
         out, err = stdout.read().rstrip(), stderr.read().rstrip()
 
-        return out.startswith('Initialized empty Git repository') and err is ''
+        return out.startswith('Initialized empty Git repository') and err == ''
 
     def _clone_repo(self, bare_repo_directory, src_repo_directory):
         stdin, stdout, stderr = self.ssh_client.exec_command(
