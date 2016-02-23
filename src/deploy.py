@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import json
 import os
 
@@ -154,9 +156,11 @@ class Deploy(object):
 
         #   [x] Config file is valid.
         self._read_config()
+        Terminal.print_assert_valid("Config file is valid.")
 
         #   [x] Is called from root of a git repo.
         self._read_repository()
+        Terminal.print_assert_valid("Found git repository.")
 
         #   [x] SSH connection is working.
         address = self.config['server']['address']
@@ -166,11 +170,15 @@ class Deploy(object):
         if not valid:
             raise DeployError('Impossible to connect to remote host.\n\t> %s' % err, base=err)
 
+        Terminal.print_assert_valid("Successfully connected to remote server.")
+
         # [x] Server has supervisor and git installed.
         try:
             server.validate_dep_list_installed(['supervisor', 'git'])
         except ServerError, e:
             raise DeployError('Server error.\n\t> %s' % e, base=e)
+
+        Terminal.print_assert_valid("Deploy dependencies are installed.")
 
         # [x] ~/.deploy/{project} exists, or create
         project_name = self.config['project']['name']
@@ -182,11 +190,15 @@ class Deploy(object):
         except ServerError, e:
             raise DeployError('Server error.\n\t> %s' % e, base=e)
 
+        Terminal.print_assert_valid("Valid directory Deploy directory structure.")
+
         # [x] check if bare and src git repo exists, create if necessary
         try:
             server.has_git_repositories(bare_repo_directory, sources_directory)
         except Server, e:
             raise DeployError('Server error.\n\t> %s' % e, base=e)
+
+        Terminal.print_assert_valid("Found remote repository.")
 
         # [x] Local repo has the remote server
         remote_repo_url = 'ssh://{0}@{1}/home/{0}/.deploy/{2}/src.git'.format(user, address, project_name)
@@ -197,6 +209,8 @@ class Deploy(object):
                 cw.set('url', remote_repo_url)
         except ValueError, e:
             self.repository.create_remote('deploy', remote_repo_url)
+
+        Terminal.print_assert_valid("Local repository has valid remote.")
 
         # [ ] setup supervisor config
 

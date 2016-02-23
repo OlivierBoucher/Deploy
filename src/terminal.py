@@ -1,3 +1,4 @@
+# coding=utf-8
 class Terminal:
     def __init__(self):
         pass
@@ -18,3 +19,7 @@ class Terminal:
     @classmethod
     def print_warn(cls, msg, *args):
         print cls.WARNING + "[WARN]: " + cls.ENDC + msg % args
+
+    @classmethod
+    def print_assert_valid(cls, msg, *args):
+        print "%s[√]%s %s" % (cls.OKBLUE, cls.ENDC, (msg % args))
