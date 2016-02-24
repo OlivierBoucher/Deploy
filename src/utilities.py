@@ -1,6 +1,8 @@
 import jsonschema
 import re
 import getpass
+import os
+from importlib import import_module
 
 from sys import stdin
 
@@ -14,6 +16,29 @@ def get_bash_script(script):
         return script
 
 
+def load_preset(preset):
+    language = preset.split(':')[0]
+    subset = preset.split(':')[1]
+    preset_class = '%s%sPreset' % (language.capitalize(), subset.capitalize())
+    py_module = import_module('.presets.%s.%s' % (language, subset), __package__)
+
+    if hasattr(py_module, preset_class):
+        return getattr(py_module, preset_class)
+
+
+def get_installed_presets():
+    presets_path = 'src/presets'
+    presets = []
+
+    for language in os.listdir(presets_path):
+        if os.path.isdir('%s/%s' % (presets_path, language)):
+            for subset_file in os.listdir('%s/%s' % (presets_path, language)):
+                if os.path.isfile('%s/%s/%s' % (presets_path, language, subset_file)):
+                    subset = os.path.splitext(subset_file)[0]
+                    if not subset.startswith('_'):
+                        presets.append('%s:%s' % (language, subset))
+
+    return presets
 
 
 def valid_config(config_json):

@@ -5,7 +5,7 @@ import os
 
 from git import Repo, InvalidGitRepositoryError
 
-from utilities import get_string, valid_address, valid_config
+from utilities import get_string, valid_address, valid_config, get_installed_presets
 
 from terminal import Terminal
 
@@ -27,11 +27,7 @@ class Deploy(object):
             'init': self._cmd_init,
             'now': self._cmd_now,
         }
-        self.presets = {
-            'java:gradle': '',
-            'java:maven': '',
-            'js:node': ''
-        }
+        self.presets = get_installed_presets()
 
     def _cmd_init(self):
         """ Interactively creates a config file

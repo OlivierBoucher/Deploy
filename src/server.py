@@ -1,6 +1,4 @@
-import errno
-
-from paramiko import SSHClient, SFTPClient, AutoAddPolicy
+from paramiko import SSHClient, AutoAddPolicy
 
 from utilities import get_bash_script, get_string
 
