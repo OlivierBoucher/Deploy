@@ -14,6 +14,8 @@ def get_bash_script(script):
         return script
 
 
+
+
 def valid_config(config_json):
     """ Validates the configuration file against the required schema
 
