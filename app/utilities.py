@@ -27,7 +27,7 @@ def load_preset(preset):
 
 
 def get_installed_presets():
-    presets_path = 'src/presets'
+    presets_path = 'app/presets'
     presets = []
 
     for language in os.listdir(presets_path):
