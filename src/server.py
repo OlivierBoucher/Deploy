@@ -113,7 +113,7 @@ class Server(object):
             self.ssh_client.close()
 
     def _install_dependency(self, pm, dep):
-        stdout, stderr = self._execute_sudo_cmd('sudo %s install -y %s' % (pm, dep))
+        stdout, stderr = self._execute_sudo_cmd('%s install -y %s' % (pm, dep))
 
         ret, error = stdout.read().rstrip(), stderr.read().rstrip()
         if error != '':
@@ -126,7 +126,7 @@ class Server(object):
         session = transport.open_session()
         session.get_pty()
 
-        session.exec_command(cmd)
+        session.exec_command("sudo -k %s" % cmd)
         stdin = session.makefile('wb', -1)
         stdout = session.makefile('rb', -1)
         stderr = session.makefile_stderr('rb', -1)
@@ -221,6 +221,20 @@ class Server(object):
                         raise ServerError('Could not create src git repository in "%s"' % src_repo_directory)
                 else:
                     raise ServerError('Missing src git repository in "%s".' % src_repo_directory)
+        except IOError, e:
+            raise ServerError('An error occurred with the ssh connection.\n\t> %s' % e, base=e)
+        finally:
+            self.ssh_client.close()
+
+    def is_service_running(self, service):
+        try:
+            self.ssh_client.connect(self.address, username=self.user)
+            stdin, stdout, stderr = self.ssh_client.exec_command(
+                "bash -c 'ps -ef | grep -v grep | grep -q %s; echo $?'" % service)
+
+            ret_code, errors = stdout.read().rstrip(), stderr.read().rstrip()
+
+            return ret_code == '0'
         except IOError, e:
             raise ServerError('An error occurred with the ssh connection.\n\t> %s' % e, base=e)
         finally:
