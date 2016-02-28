@@ -240,7 +240,7 @@ class Server(object):
 
         return ret_code == '0'
 
-    def has_supervisor_config(self, project, auto_create=True):
+    def get_supervisor_config(self, project, auto_create=True):
         try:
             self.ssh_client.connect(self.address, username=self.user)
 
@@ -269,10 +269,23 @@ class Server(object):
                     if err != '':
                         self.password = None
                         raise ServerError('Could not create supervisor config in "%s" : %s' % (config_path, err))
+
+                    return ''
                 else:
                     raise ServerError('Missing supervisor config for %s in "%s".' % (project, config_path))
 
+            stdin, stdout, stderr = self.ssh_client.exec_command('cat %s' % config_path)
+
+            out, err = stdout.read().rstrip(), stderr.read.rstrip()
+
+            if err != '':
+                raise ServerError('Could not read supervisor config "%s"' % config_path)
+
+            return out
         except IOError, e:
             raise ServerError('An error occurred with the ssh connection.\n\t> %s' % e, base=e)
         finally:
             self.ssh_client.close()
+
+    def set_supervisor_config(self, project, config):
+        pass

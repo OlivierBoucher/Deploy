@@ -224,10 +224,13 @@ class Deploy(object):
         # [ ] setup supervisor config
         try:
             # File is there
-            server.has_supervisor_config(project_name)
+            rmt_sup_cfg = server.get_supervisor_config(project_name)
+            local_sup_cfg = get_supervisor_config(self.config, preset)
+
             # File is in sync with current preset
-            supervisor_cfg = get_supervisor_config(self.config, preset)
-            print supervisor_cfg
+            if rmt_sup_cfg != local_sup_cfg:
+                #Update the config
+
 
         except Server, e:
             raise DeployError('Server error.\n\t> %s' % e, base=e)
