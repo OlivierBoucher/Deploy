@@ -5,7 +5,7 @@ import os
 
 from git import Repo, InvalidGitRepositoryError
 
-from utilities import get_string, valid_address, valid_config, get_installed_presets
+from utilities import get_string, valid_address, valid_config, get_installed_presets, load_preset
 
 from terminal import Terminal
 
@@ -208,17 +208,34 @@ class Deploy(object):
 
         Terminal.print_assert_valid("Local repository has valid remote.")
 
+        # [x] validate and load preset
+        preset_name = project_name = self.config['project']['preset']
+        if preset_name not in self.presets:
+            raise DeployError('Invalid preset. %s was not found in %s' % (preset_name, self.presets))
+
+        preset_class = load_preset(preset_name)
+        if preset_class is None:
+            raise DeployError('Unable to load preset %s.' % preset_name)
+
+        preset = preset_class()
+
         # [ ] setup supervisor config
+        try:
+            # File is there
+            server.has_supervisor_config(project_name)
+            # File is in sync with current preset
+        except Server, e:
+            raise DeployError('Server error.\n\t> %s' % e, base=e)
 
-        # Warnings
-        #   [ ] Local repo has uncommitted changes
-        #   [ ] Remote repo is already up to date
+            # Warnings
+            #   [ ] Local repo has uncommitted changes
+            #   [ ] Remote repo is already up to date
 
-        # Do the do
-        #   [ ] Push to the remote
-        #   [ ] Run the before scripts
-        #   [ ] Run the preset
-        #   [ ] Run the after scripts
+            # Do the do
+            #   [ ] Push to the remote
+            #   [ ] Run the before scripts
+            #   [ ] Run the preset
+            #   [ ] Run the after scripts
 
     def execute(self):
         try:
