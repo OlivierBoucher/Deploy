@@ -237,7 +237,18 @@ class Server(object):
     def has_supervisor_config(self, project, auto_create=True):
         try:
             self.ssh_client.connect(self.address, username=self.user)
-            config_path = '/etc/supervisor/conf.d/%s.conf' % project
+
+            ubuntu_config_dir = '/etc/supervisor/conf.d'
+            rehl_config_dir = '/etc/supervisord.d'
+            config_path = ''
+
+            if self._has_file(ubuntu_config_dir):
+                config_path = "%s/%s.conf" % (ubuntu_config_dir, project)
+            elif self._has_file(rehl_config_dir):
+                config_path = '%s/%s.conf' % (rehl_config_dir, project)
+            else:
+                raise ServerError('Could not find supervisor include dir')
+
             if not self._has_file(config_path):
                 if auto_create:
                     Terminal.print_warn(
