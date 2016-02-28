@@ -4,6 +4,8 @@ from utilities import get_bash_script, get_string
 
 from terminal import Terminal
 
+from socket import timeout
+
 
 class ServerError(Exception):
     """ Base error class for Server """
@@ -113,9 +115,8 @@ class Server(object):
             self.ssh_client.close()
 
     def _install_dependency(self, pm, dep):
-        stdout, stderr = self._execute_sudo_cmd('%s install -y %s' % (pm, dep))
+        ret, error = self._execute_sudo_cmd('%s install -y %s' % (pm, dep))
 
-        ret, error = stdout.read().rstrip(), stderr.read().rstrip()
         if error != '':
             self.password = None
 
@@ -124,22 +125,27 @@ class Server(object):
     def _execute_sudo_cmd(self, cmd):
         transport = self.ssh_client.get_transport()
         session = transport.open_session()
+        session.settimeout(3)
         session.get_pty()
 
-        session.exec_command("sudo -k %s" % cmd)
-        stdin = session.makefile('wb', -1)
-        stdout = session.makefile('rb', -1)
-        stderr = session.makefile_stderr('rb', -1)
+        try:
+            session.exec_command("sudo -k %s" % cmd)
+            stdin = session.makefile('wb', -1)
+            stdout = session.makefile('rb', -1)
+            stderr = session.makefile_stderr('rb', -1)
 
-        stdin.write('%s\n' % self.password)
-        stdin.flush()
+            stdin.write('%s\n' % self.password)
+            stdin.flush()
 
-        return stdout, stderr
+            return stdout.read().rstrip(), stderr.read().rstrip()
+
+        except timeout, e:
+            return "", "Invalid password."
 
     def _prompt_superuser_pwd(self, label):
         """"""
         self.password = get_string(label, password=True)
-        return self.passwords
+        return self.password
 
     def _has_file(self, file):
         stdin, stdout, stderr = self.ssh_client.exec_command('stat %s' % file)
@@ -243,9 +249,9 @@ class Server(object):
             config_path = ''
 
             if self._has_file(ubuntu_config_dir):
-                config_path = "%s/%s.conf" % (ubuntu_config_dir, project)
+                config_path = "%s/%s.conf" % (ubuntu_config_dir, project.lower())
             elif self._has_file(rehl_config_dir):
-                config_path = '%s/%s.conf' % (rehl_config_dir, project)
+                config_path = '%s/%s.conf' % (rehl_config_dir, project.lower())
             else:
                 raise ServerError('Could not find supervisor include dir')
 
@@ -253,11 +259,16 @@ class Server(object):
                 if auto_create:
                     Terminal.print_warn(
                         'Missing supervisor config for %s in "%s", attempting to create.' % (project, config_path))
-                    stdout, stderr = self._execute_sudo_cmd('touch %s' % config_path)
 
-                    error = stderr.read().rstrip()
-                    if error != '':
-                        raise ServerError('Could not create supervisor config in "%s" : %s' % (config_path, error))
+                    if self.user != 'root' and self.password is None:
+                        self._prompt_superuser_pwd(
+                            'Missing file "%s", Please enter password to proceed to creation.' % config_path)
+
+                    out, err = self._execute_sudo_cmd('touch %s' % config_path)
+
+                    if err != '':
+                        self.password = None
+                        raise ServerError('Could not create supervisor config in "%s" : %s' % (config_path, err))
                 else:
                     raise ServerError('Missing supervisor config for %s in "%s".' % (project, config_path))
 

@@ -10,3 +10,7 @@ def run():
 
     deploy = Deploy(args.command)
     deploy.execute()
+
+
+if __name__ == "__main__":
+    run()

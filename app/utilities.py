@@ -2,6 +2,8 @@ import jsonschema
 import re
 import getpass
 import os
+import ConfigParser
+import StringIO
 from importlib import import_module
 
 from sys import stdin
@@ -14,6 +16,31 @@ def get_bash_script(script):
     with open('bash/%s.sh' % script, 'r') as file_handle:
         script = file_handle.read()
         return script
+
+
+def get_supervisor_config(config, preset):
+    user = config['server']['user']
+    project = config['project']['name']
+    supervisor_config = ConfigParser.RawConfigParser()
+    section = 'program:%s' % project
+
+    supervisor_config.add_section(section)
+    supervisor_config.set(section, 'command', preset.get_run_cmd())
+    supervisor_config.set(section, 'autostart', 'true')
+    supervisor_config.set(section, 'autorestart', 'true')
+    supervisor_config.set(section, 'startretries', '10')
+    supervisor_config.set(section, 'user', user)
+    supervisor_config.set(section, 'directory', '/home/%s/.deploy/%s' % (user, project))
+    supervisor_config.set(section, 'redirect_stderr', 'true')
+    supervisor_config.set(section, 'stdout_logfile', '/var/log/supervisor/%s.log' % project)
+    supervisor_config.set(section, 'stdout_logfile_maxbytes', '50MB')
+    supervisor_config.set(section, 'stdout_logfile_backups', '10')
+    supervisor_config.set(section, 'environment', preset.get_environment_vars())
+
+    output = StringIO.StringIO()
+    supervisor_config.write(output)
+
+    return output.getvalue()
 
 
 def load_preset(preset):

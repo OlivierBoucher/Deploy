@@ -15,3 +15,7 @@ class Preset:
     @abstractmethod
     def get_run_cmd(self):
         """ The main run command used by supervisor to start the program. """
+
+    @abstractmethod
+    def get_environment_vars(self):
+        """ Returns the required environment variables """

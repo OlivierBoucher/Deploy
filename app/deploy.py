@@ -5,7 +5,7 @@ import os
 
 from git import Repo, InvalidGitRepositoryError
 
-from utilities import get_string, valid_address, valid_config, get_installed_presets, load_preset
+from utilities import get_string, valid_address, valid_config, get_installed_presets, load_preset, get_supervisor_config
 
 from terminal import Terminal
 
@@ -209,7 +209,7 @@ class Deploy(object):
         Terminal.print_assert_valid("Local repository has valid remote.")
 
         # [x] validate and load preset
-        preset_name = project_name = self.config['project']['preset']
+        preset_name = self.config['project']['preset']
         if preset_name not in self.presets:
             raise DeployError('Invalid preset. %s was not found in %s' % (preset_name, self.presets))
 
@@ -219,11 +219,16 @@ class Deploy(object):
 
         preset = preset_class()
 
+        Terminal.print_assert_valid("Loaded preset.")
+
         # [ ] setup supervisor config
         try:
             # File is there
             server.has_supervisor_config(project_name)
             # File is in sync with current preset
+            supervisor_cfg = get_supervisor_config(self.config, preset)
+            print supervisor_cfg
+
         except Server, e:
             raise DeployError('Server error.\n\t> %s' % e, base=e)
 
