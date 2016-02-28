@@ -188,7 +188,7 @@ class Deploy(object):
 
         Terminal.print_assert_valid("Valid directory Deploy directory structure.")
 
-        # [x] check if bare and src git repo exists, create if necessary
+        # [x] check if bare and app git repo exists, create if necessary
         try:
             server.has_git_repositories(bare_repo_directory, sources_directory)
         except Server, e:
