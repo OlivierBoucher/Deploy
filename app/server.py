@@ -139,10 +139,10 @@ class Server(object):
     def _prompt_superuser_pwd(self, label):
         """"""
         self.password = get_string(label, password=True)
-        return self.password
+        return self.passwords
 
-    def _has_file(self, directory):
-        stdin, stdout, stderr = self.ssh_client.exec_command('stat %s' % directory)
+    def _has_file(self, file):
+        stdin, stdout, stderr = self.ssh_client.exec_command('stat %s' % file)
 
         out, err = stdout.read().rstrip(), stderr.read().rstrip()
 
@@ -226,15 +226,30 @@ class Server(object):
         finally:
             self.ssh_client.close()
 
-    def is_service_running(self, service):
+    def _is_service_running(self, service):
+        stdin, stdout, stderr = self.ssh_client.exec_command(
+            "bash -c 'ps -ef | grep -v grep | grep -q %s; echo $?'" % service)
+
+        ret_code, errors = stdout.read().rstrip(), stderr.read().rstrip()
+
+        return ret_code == '0'
+
+    def has_supervisor_config(self, project, auto_create=True):
         try:
             self.ssh_client.connect(self.address, username=self.user)
-            stdin, stdout, stderr = self.ssh_client.exec_command(
-                "bash -c 'ps -ef | grep -v grep | grep -q %s; echo $?'" % service)
+            config_path = '/etc/supervisor/conf.d/%s.conf' % project
+            if not self._has_file(config_path):
+                if auto_create:
+                    Terminal.print_warn(
+                        'Missing supervisor config for %s in "%s", attempting to create.' % (project, config_path))
+                    stdout, stderr = self._execute_sudo_cmd('touch %s' % config_path)
 
-            ret_code, errors = stdout.read().rstrip(), stderr.read().rstrip()
+                    error = stderr.read().rstrip()
+                    if error != '':
+                        raise ServerError('Could not create supervisor config in "%s" : %s' % (config_path, error))
+                else:
+                    raise ServerError('Missing supervisor config for %s in "%s".' % (project, config_path))
 
-            return ret_code == '0'
         except IOError, e:
             raise ServerError('An error occurred with the ssh connection.\n\t> %s' % e, base=e)
         finally:
