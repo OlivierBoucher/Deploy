@@ -288,4 +288,28 @@ class Server(object):
             self.ssh_client.close()
 
     def set_supervisor_config(self, project, config):
-        pass
+        try:
+            self.ssh_client.connect(self.address, username=self.user)
+
+            ubuntu_config_dir = '/etc/supervisor/conf.d'
+            rehl_config_dir = '/etc/supervisord.d'
+            config_path = ''
+
+            if self._has_file(ubuntu_config_dir):
+                config_path = "%s/%s.conf" % (ubuntu_config_dir, project.lower())
+            elif self._has_file(rehl_config_dir):
+                config_path = '%s/%s.conf' % (rehl_config_dir, project.lower())
+            else:
+                raise ServerError('Could not find supervisor include dir')
+
+            stdin, stdout, stderr = self._execute_sudo_cmd("bash -c 'echo \"%s\" > %s'" % (config, config_path))
+
+            err = stderr.read().rstrip()
+
+            if err != '':
+                raise ServerError('Could not write to config in "%s" : %s' % (config_path, err))
+
+        except IOError, e:
+            raise ServerError('An error occurred with the ssh connection.\n\t> %s' % e, base=e)
+        finally:
+            self.ssh_client.close()

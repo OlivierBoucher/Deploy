@@ -229,21 +229,21 @@ class Deploy(object):
 
             # File is in sync with current preset
             if rmt_sup_cfg != local_sup_cfg:
-                #Update the config
-
-
+                server.set_supervisor_config(project_name, local_sup_cfg)
         except Server, e:
             raise DeployError('Server error.\n\t> %s' % e, base=e)
 
-            # Warnings
-            #   [ ] Local repo has uncommitted changes
-            #   [ ] Remote repo is already up to date
+        Terminal.print_assert_valid("Installed supervisor config.")
 
-            # Do the do
-            #   [ ] Push to the remote
-            #   [ ] Run the before scripts
-            #   [ ] Run the preset
-            #   [ ] Run the after scripts
+        # Warnings
+        #   [ ] Local repo has uncommitted changes
+        #   [ ] Remote repo is already up to date
+
+        # Do the do
+        #   [ ] Push to the remote
+        #   [ ] Run the before scripts
+        #   [ ] Run the preset
+        #   [ ] Run the after scripts
 
     def execute(self):
         try:
