@@ -221,7 +221,7 @@ class Deploy(object):
 
         Terminal.print_assert_valid("Loaded preset.")
 
-        # [ ] setup supervisor config
+        # [x] setup supervisor config
         try:
             # File is there
             rmt_sup_cfg = server.get_supervisor_config(project_name)
@@ -241,6 +241,13 @@ class Deploy(object):
 
         # Do the do
         #   [ ] Push to the remote
+        remote_repo = self.repository.remote(name='deploy')
+        results = remote_repo.push()
+
+        for info in results:
+            if info.flags & info.ERROR:
+                raise DeployError('Error pushing to remote repository.\n\t> %s' % info.summary)
+
         #   [ ] Run the before scripts
         #   [ ] Run the preset
         #   [ ] Run the after scripts
