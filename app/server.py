@@ -276,7 +276,7 @@ class Server(object):
 
             stdin, stdout, stderr = self.ssh_client.exec_command('cat %s' % config_path)
 
-            out, err = stdout.read().rstrip(), stderr.read.rstrip()
+            out, err = stdout.read().rstrip(), stderr.read().rstrip()
 
             if err != '':
                 raise ServerError('Could not read supervisor config "%s"' % config_path)
@@ -302,9 +302,11 @@ class Server(object):
             else:
                 raise ServerError('Could not find supervisor include dir')
 
-            stdin, stdout, stderr = self._execute_sudo_cmd("bash -c 'echo \"%s\" > %s'" % (config, config_path))
+            if self.user != 'root' and self.password is None:
+                self._prompt_superuser_pwd(
+                    'Need to write configuration to "%s", please enter password to proceed.' % config_path)
 
-            err = stderr.read().rstrip()
+            out, err = self._execute_sudo_cmd("bash -c 'echo \"%s\" > %s'" % (config, config_path))
 
             if err != '':
                 raise ServerError('Could not write to config in "%s" : %s' % (config_path, err))

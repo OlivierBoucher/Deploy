@@ -22,7 +22,7 @@ def get_supervisor_config(config, preset):
     user = config['server']['user']
     project = config['project']['name']
     supervisor_config = ConfigParser.RawConfigParser()
-    section = 'program:%s' % project
+    section = 'program:%s' % project.lower()
 
     supervisor_config.add_section(section)
     supervisor_config.set(section, 'command', preset.get_run_cmd())
@@ -35,7 +35,10 @@ def get_supervisor_config(config, preset):
     supervisor_config.set(section, 'stdout_logfile', '/var/log/supervisor/%s.log' % project)
     supervisor_config.set(section, 'stdout_logfile_maxbytes', '50MB')
     supervisor_config.set(section, 'stdout_logfile_backups', '10')
-    supervisor_config.set(section, 'environment', preset.get_environment_vars())
+
+    env = preset.get_environment_vars()
+    if env != '':
+        supervisor_config.set(section, 'environment', env)
 
     output = StringIO.StringIO()
     supervisor_config.write(output)
