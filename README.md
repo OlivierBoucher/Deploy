@@ -33,5 +33,12 @@ init is the command that will be used to generate the configuration file. The co
 
 #### > deploy now
 
-now pushes the lastest changes to the server and restarts the service. 
+now pushes the latest changes to the server and restarts the service.
 
+
+## Things to be figured out
+
+- How to abstract the presets so that it can apply to multiple languages, both compiled and interpreted.
+- Languages version requirement
+- Package managers
+- Manage artifacts, binaries

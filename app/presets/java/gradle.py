@@ -13,6 +13,11 @@ class JavaGradlePreset(Preset):
         return '/bin/bash run.sh'
 
     def perform_verifications(self):
+        """
+        Perform verifications such as build.gradle file detection,
+        gradle wrapper detection, etc...
+
+        """
         pass
 
     def get_environment_vars(self):

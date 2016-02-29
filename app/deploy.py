@@ -242,7 +242,7 @@ class Deploy(object):
         # Do the do
         #   [ ] Push to the remote
         remote_repo = self.repository.remote(name='deploy')
-        results = remote_repo.push()
+        results = remote_repo.push(refspec='master:master')
 
         for info in results:
             if info.flags & info.ERROR:
